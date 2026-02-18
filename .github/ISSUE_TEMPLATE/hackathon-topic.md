@@ -1,7 +1,6 @@
 ---
 Name: Hackathon Topic Proposal
-About: Suggest a Topic for a Hackathon
-
+About: Suggest a topic for a hackathon
 ---
 
 **How to categorize this topic?**
@@ -19,7 +18,8 @@ If multiple identifiers make sense you can also state the commands multiple time
 -->
 /area TODO
 /kind enhancement
-/label teamsize/small
+<!-- small = 1-2 people, medium = 3 people, large = 4 people or more
+/label teamsize/TODO
 
 <!-- Uncomment the following line if the topic is fast-track! -->
 <!-- /label fast-track -->
