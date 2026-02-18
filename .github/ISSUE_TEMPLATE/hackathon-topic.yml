@@ -1,43 +1,27 @@
+---
 name: Hackathon Topic Proposal
-description: Propose a topic for a Gardener Hackathon
-labels: []
-body:
-  - type: textarea
-    id: description
-    attributes:
-      label: Description
-      description: Describe the topic in detail. What problem does it solve? What's the goal?
-      placeholder: |
-        Describe what you want to work on...
-        - What problem does this solve?
-        - What is the expected outcome?
-    validations:
-      required: true
+about: Suggest a Topic for a Hackathon
 
-  - type: dropdown
-    id: difficulty
-    attributes:
-      label: Estimated Difficulty
-      description: How complex do you think this topic is?
-      options:
-        - Easy (good for newcomers)
-        - Medium
-        - Hard (requires deep expertise)
-    validations:
-      required: true
+---
 
-  - type: input
-    id: team_size
-    attributes:
-      label: Ideal Team Size
-      description: How many people would be ideal for this topic?
-      placeholder: e.g., "2-4"
+**How to categorize this topic?**
+<!--
+Please select area, kind, and teamsize. This helps with assigning.
+Replace below TODOs or exchange the existing identifiers with those that fit best in your opinion.
+If multiple identifiers make sense you can also state the commands multiple times, e.g.
+  /area control-plane
+  /area auto-scaling
+  ...
 
-  - type: textarea
-    id: resources
-    attributes:
-      label: Resources & References
-      description: Links to relevant PRs, issues, or documentation
-      placeholder: |
-        - https://github.com/gardener/gardener/issues/...
-        - https://gardener.cloud/docs/...
+"/area"           identifiers:     audit-logging|auto-scaling|backup|certification|control-plane-migration|control-plane|cost|delivery|dev-productivity|disaster-recovery|documentation|high-availability|logging|metering|monitoring|networking|open-source|ops-productivity|os|performance|quality|robustness|scalability|security|storage|testing|usability|user-management
+"/kind"           identifiers:     api-change|bug|cleanup|discussion|enhancement|epic|impediment|poc|post-mortem|question|regression|task|technical-debt|test
+"/label teamsize" identifiers:     teamsize/small|teamsize/medium|teamsize/large
+-->
+/area TODO
+/kind enhancement
+/label teamsize/small
+
+<!-- Uncomment the following line if the topic is fast-track! -->
+<!-- /label fast-track -->
+
+**Description of the Topic*:
