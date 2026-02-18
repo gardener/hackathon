@@ -24,4 +24,4 @@ If multiple identifiers make sense you can also state the commands multiple time
 <!-- Uncomment the following line if the topic is fast-track! -->
 <!-- /label fast-track -->
 
-**Description of the Topic*:
+**What is the topic about?**:
