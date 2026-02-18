@@ -18,7 +18,7 @@ If multiple identifiers make sense you can also state the commands multiple time
 -->
 /area TODO
 /kind TODO
-<!-- small = 1-2 people, medium = 3 people, large = 4 people or more
+<!-- small = 1-2 people, medium = 3 people, large = 4 people or more -->
 /label teamsize/TODO
 
 <!-- Uncomment the following line if the topic is fast-track! -->
