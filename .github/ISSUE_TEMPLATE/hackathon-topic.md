@@ -1,6 +1,6 @@
 ---
-name: Hackathon Topic Proposal
-about: Suggest a Topic for a Hackathon
+Name: Hackathon Topic Proposal
+About: Suggest a Topic for a Hackathon
 
 ---
 
