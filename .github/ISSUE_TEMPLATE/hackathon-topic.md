@@ -17,7 +17,7 @@ If multiple identifiers make sense you can also state the commands multiple time
 "/label teamsize" identifiers:     teamsize/small|teamsize/medium|teamsize/large
 -->
 /area TODO
-/kind enhancement
+/kind TODO
 <!-- small = 1-2 people, medium = 3 people, large = 4 people or more
 /label teamsize/TODO
 
