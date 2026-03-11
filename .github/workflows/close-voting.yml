@@ -142,16 +142,11 @@ jobs:
             resultsBody += `|:----:|:------|:-----:|:-----|\n`;
             
             issueVotes.forEach((issue, index) => {
-              let medal = '';
-              if (index === 0) medal = '🥇 ';
-              else if (index === 1) medal = '🥈 ';
-              else if (index === 2) medal = '🥉 ';
-              
               const team = issue.assignedUsers.length > 0 
                 ? issue.assignedUsers.map(a => `@${a}`).join(', ')
                 : '-';
               
-              resultsBody += `| ${medal}${index + 1} | [#${issue.number} - ${issue.title}](${issue.url}) | ${issue.votes} | ${team} |\n`;
+              resultsBody += `| ${index + 1} | [#${issue.number} - ${issue.title}](${issue.url}) | ${issue.votes} | ${team} |\n`;
             });
             
             resultsBody += `\n<!-- hackathon-voting-discussion-closed -->\n`;
