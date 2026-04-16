@@ -1,6 +1,7 @@
 ---
 name: Hackathon Topic Proposal
 about: Suggest a topic for a hackathon
+labels: 'Q2/2026'
 ---
 
 **How to categorize this topic?**
