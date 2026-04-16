@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
   discussions: write
 
 jobs:
@@ -116,52 +115,31 @@ jobs:
                 title: issueTitle,
                 url: issueUrl,
                 votes: votes,
-                interestedUsers: interestedUsers,
-                assignedUsers: []
+                interestedUsers: interestedUsers
               });
-              
+
               console.log(`Issue #${issueNumber}: ${votes} votes, ${interestedUsers.length} interested`);
             }
-            
+
             // Sort by votes descending (top voted first)
             issueVotes.sort((a, b) => b.votes - a.votes);
-            
-            // Smart team assignment: assign people to top-voted topics first
-            // Each person only gets assigned to ONE topic (their highest-voted preference)
-            const assignedPeople = new Set();
-            
-            for (const issue of issueVotes) {
-              for (const user of issue.interestedUsers) {
-                if (!assignedPeople.has(user)) {
-                  issue.assignedUsers.push(user);
-                  assignedPeople.add(user);
-                }
-              }
-            }
-            
-            console.log(`\nTeam assignments (prioritizing top-voted topics):`);
-            for (const issue of issueVotes) {
-              if (issue.assignedUsers.length > 0) {
-                console.log(`  #${issue.number}: ${issue.assignedUsers.join(', ')}`);
-              }
-            }
-            
+
             // Build results body
             let resultsBody = `# 🏆 Hackathon Topic Voting Results\n\n`;
             resultsBody += `## 📊 Ranked Topics\n\n`;
             resultsBody += `| Rank | Topic | Votes | Team |\n`;
             resultsBody += `|:----:|:------|:-----:|:-----|\n`;
-            
+
             issueVotes.forEach((issue, index) => {
-              const team = issue.assignedUsers.length > 0 
-                ? issue.assignedUsers.map(a => `@${a}`).join(', ')
+              const team = issue.interestedUsers.length > 0
+                ? issue.interestedUsers.map(u => `@${u}`).join(', ')
                 : '-';
-              
+
               resultsBody += `| ${index + 1} | [#${issue.number} - ${issue.title}](${issue.url}) | ${issue.votes} | ${team} |\n`;
             });
-            
+
             resultsBody += `\n<!-- hackathon-voting-discussion-closed -->\n`;
-            
+
             // Update the discussion body with results
             const updateMutation = `
               mutation($discussionId: ID!, $body: String!) {
@@ -173,29 +151,11 @@ jobs:
                 }
               }
             `;
-            
+
             await github.graphql(updateMutation, {
               discussionId: discussion.id,
               body: resultsBody
             });
-            
+
             console.log(`\nUpdated discussion #${discussion.number} with voting results`);
-            
-            // Assign users to issues
-            for (const issue of issueVotes) {
-              if (issue.assignedUsers.length === 0) continue;
-              
-              try {
-                await github.rest.issues.addAssignees({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issue.number,
-                  assignees: issue.assignedUsers
-                });
-                console.log(`Assigned ${issue.assignedUsers.join(', ')} to issue #${issue.number}`);
-              } catch (error) {
-                console.log(`Warning: Could not assign users to issue #${issue.number}: ${error.message}`);
-              }
-            }
-            
             console.log('\nVoting closed successfully!');
