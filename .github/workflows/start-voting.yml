@@ -8,6 +8,10 @@ on:
         required: false
         default: 'General'
         type: string
+      label:
+        description: 'Only include issues with this label (e.g. Q2/2026)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -24,15 +28,17 @@ jobs:
           github-token: ${{ secrets.DISCUSSION_TOKEN }}
           script: |
             const category = '${{ inputs.discussion_category }}';
-            
+            const filterLabel = '${{ inputs.label }}';
+
             // Get all open issues
             const issues = await github.paginate(github.rest.issues.listForRepo, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
+              labels: filterLabel,
               per_page: 100
             });
-            
+
             // Filter out PRs
             const topicIssues = issues.filter(issue => !issue.pull_request);
             

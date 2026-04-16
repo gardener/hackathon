@@ -2,6 +2,11 @@ name: Close Hackathon Voting
 
 on:
   workflow_dispatch:
+    inputs:
+      label:
+        description: 'Only count votes for issues with this label (e.g. Q2/2026)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,6 +22,7 @@ jobs:
         with:
           github-token: ${{ secrets.DISCUSSION_TOKEN }}
           script: |
+            const filterLabel = '${{ inputs.label }}';
             // Find the active voting discussion by searching for the marker
             const searchQuery = `
               query($owner: String!, $repo: String!) {
@@ -87,13 +93,18 @@ jobs:
               // Get issue details
               let issueTitle = `Issue #${issueNumber}`;
               let issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
-              
+
               try {
                 const issueData = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber
                 });
+                const hasLabel = issueData.data.labels.some(l => l.name === filterLabel);
+                if (!hasLabel) {
+                  console.log(`Skipping issue #${issueNumber} - missing label "${filterLabel}"`);
+                  continue;
+                }
                 issueTitle = issueData.data.title;
                 issueUrl = issueData.data.html_url;
               } catch (error) {
