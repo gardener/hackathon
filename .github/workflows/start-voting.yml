@@ -135,7 +135,8 @@ jobs:
             // Add a comment for each topic issue
             for (const issue of topicIssues) {
               const commentBody = `<!-- hackathon-topic-vote:${issue.number} -->\n\n` +
-                `## [#${issue.number} - ${issue.title}](${issue.html_url})`;
+                `## [#${issue.number} - ${issue.title}](${issue.html_url})\n\n` +
+                (issue.body ? issue.body : '*No description provided.*');
               
               const addCommentMutation = `
                 mutation($discussionId: ID!, $body: String!) {
