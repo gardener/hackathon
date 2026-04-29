@@ -56,6 +56,7 @@ jobs:
             body += `- ⬆️ Upvote = I want this topic to happen\n`;
             body += `- 🚀 React = I want to work on this topic (you'll be assigned when voting closes)\n\n`;
             body += `Each topic has its own comment below. Upvote and react to the topics you're interested in!\n\n`;
+            body +== `As this discussion is public, anybody can vote here. Every ⬆️ Upvote will be counted, but for the topic interest 🚀 reactions, only the people who are actually participating the hackathon will be taken into account. This also applies for the following topic assignments.\n\n`;
             body += `## 📋 Topics\n\n`;
             
             for (const issue of topicIssues) {
