@@ -7,6 +7,10 @@ on:
         description: 'Only count votes for issues with this label (e.g. Q2/2026)'
         required: true
         type: string
+      participants:
+        description: 'Comma-separated list of GitHub handles attending the hackathon (e.g. tobschli,rfranzke). Rocket reactions from others are ignored.'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,6 +26,7 @@ jobs:
           github-token: ${{ secrets.DISCUSSION_TOKEN }}
           script: |
             const filterLabel = '${{ inputs.label }}';
+            const participantSet = new Set('${{ inputs.participants }}'.split(',').map(h => h.trim()).filter(Boolean));
             // Find the active voting discussion by searching for the marker
             const searchQuery = `
               query($owner: String!, $repo: String!) {
@@ -84,9 +89,9 @@ jobs:
               // Use upvoteCount for votes
               const votes = comment.upvoteCount || 0;
               
-              // Get users who want to work on this (rocket reaction)
+              // Get users who want to work on this (rocket reaction), filtered to actual participants
               const interestedUsers = comment.reactions.nodes
-                .filter(r => r.content === 'ROCKET')
+                .filter(r => r.content === 'ROCKET' && participantSet.has(r.user.login))
                 .map(r => r.user.login);
               
               // Get issue details
@@ -118,7 +123,7 @@ jobs:
                 interestedUsers: interestedUsers
               });
 
-              console.log(`Issue #${issueNumber}: ${votes} votes, ${interestedUsers.length} interested`);
+              console.log(`Issue #${issueNumber}: ${votes} votes, ${interestedUsers.length} interested (participants only)`);
             }
 
             // Sort by votes descending (top voted first)
