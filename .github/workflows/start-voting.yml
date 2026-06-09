@@ -6,7 +6,7 @@ on:
       discussion_category:
         description: 'Discussion category to create the voting discussion in'
         required: false
-        default: 'General'
+        default: 'voting'
         type: string
       label:
         description: 'Only include issues with this label (e.g. Q2/2026)'
