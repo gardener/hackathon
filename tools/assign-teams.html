@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackathon Team Assigner</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --pill-bg: #1f6feb33;
+      --pill-border: #1f6feb;
+      --pill-text: #58a6ff;
+      --drag-over: #1f6feb22;
+      --drag-over-border: #1f6feb;
+      --interested-bg: #0d2e0d;
+      --interested-border: #2ea043;
+      --interested-text: #3fb950;
+      --not-interested-bg: #2d1a00;
+      --not-interested-border: #bb6a00;
+      --not-interested-text: #e3a040;
+      --no-votes-bg: #1c1c1c;
+      --no-votes-border: #555;
+      --no-votes-text: #999;
+      --monocompany-bg: #2d1f00;
+      --monocompany-border: #e3b341;
+      --monocompany-text: #e3b341;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header span { color: var(--text-muted); font-size: 14px; }
+
+    main { max-width: 1600px; margin: 0 auto; padding: 24px; }
+
+    /* Setup panel */
+    #setup {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #setup h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .field input, .field textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--drag-over-border); }
+    .field textarea { resize: vertical; min-height: 80px; font-family: monospace; }
+    .field small { color: var(--text-muted); font-size: 12px; }
+
+    .btn {
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: var(--border); }
+
+    #error {
+      background: #3d1717;
+      border: 1px solid #8b2020;
+      border-radius: 6px;
+      color: #ff7b72;
+      display: none;
+      font-size: 13px;
+      padding: 10px 14px;
+    }
+
+    /* Workarea: main content + sidebar */
+    #workarea { display: none; gap: 24px; }
+    #workarea-inner { display: flex; flex-direction: column; gap: 24px; flex: 1; min-width: 0; }
+
+    /* Satisfaction sidebar */
+    #satisfaction-panel {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      align-self: flex-start;
+      position: sticky;
+      top: 16px;
+    }
+    #satisfaction-panel h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    #satisfaction-summary {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .satisfaction-summary-numbers { font-size: 18px; font-weight: 700; color: var(--text); }
+    .satisfaction-summary-numbers span { color: var(--accent-hover); }
+
+    #satisfaction-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .sat-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+    }
+    .sat-row img { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+    .sat-row .sat-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sat-row .sat-status { font-size: 10px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; flex-shrink: 0; }
+    .sat-row.happy    { background: #0d2e0d55; border-color: #2ea04344; }
+    .sat-row.happy    .sat-status { color: #3fb950; }
+    .sat-row.unhappy  { background: #2d1a0055; border-color: #bb6a0044; }
+    .sat-row.unhappy  .sat-status { color: #e3a040; }
+    .sat-row.unplaced { background: #1a1a2255; border-color: #30363d; }
+    .sat-row.unplaced .sat-status { color: var(--text-muted); }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .toolbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+
+    /* People pool */
+    #pool-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    #pool-section h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    #pool {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 40px;
+      border-radius: 6px;
+      transition: background 0.15s, border 0.15s;
+      padding: 4px;
+    }
+    #pool.drag-over {
+      background: var(--drag-over);
+      border: 1px dashed var(--drag-over-border);
+    }
+
+    /* Pool section divider for no-interest people */
+    .pool-group-label {
+      width: 100%;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 4px 0 2px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+    .pool-group-label:first-child { border-top: none; margin-top: 0; }
+
+    /* Topics grid */
+    #topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 16px;
+    }
+
+    .topic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .topic-card.drag-over {
+      border-color: var(--drag-over-border);
+      background: var(--drag-over);
+    }
+
+    .topic-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .topic-rank {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      min-width: 28px;
+      padding-top: 1px;
+    }
+    .rank-1 { color: #ffd700; }
+    .rank-2 { color: #c0c0c0; }
+    .rank-3 { color: #cd7f32; }
+
+    .teamsize-badge {
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 2px 7px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 2px;
+    }
+    .teamsize-small  { background: #1a3a1a; border: 1px solid #2ea043; color: #3fb950; }
+    .teamsize-medium { background: #2d2208; border: 1px solid #d29922; color: #e3b341; }
+    .teamsize-large  { background: #2d0f0f; border: 1px solid #c0392b; color: #ff7b72; }
+
+    .topic-info { flex: 1; min-width: 0; }
+    .topic-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .topic-title a {
+      color: var(--pill-text);
+      text-decoration: none;
+    }
+    .topic-title a:hover { text-decoration: underline; }
+    .topic-votes {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Interested voters list under topic header */
+    .topic-interested {
+      padding: 6px 14px 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+    .topic-interested-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    .interest-avatar {
+      position: relative;
+      width: 22px;
+      height: 22px;
+    }
+    .interest-avatar img {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: block;
+    }
+    .interest-avatar.assigned img { border-color: var(--interested-border); }
+    .interest-avatar .avatar-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .interest-avatar:hover .avatar-tooltip { display: block; }
+
+    .topic-team {
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 52px;
+      align-content: flex-start;
+    }
+
+    /* Person pill variants */
+    .person-pill {
+      align-items: center;
+      border-radius: 20px;
+      cursor: grab;
+      display: flex;
+      font-size: 12px;
+      font-weight: 500;
+      gap: 6px;
+      padding: 3px 10px 3px 4px;
+      user-select: none;
+      transition: opacity 0.1s, transform 0.1s;
+      /* default: neutral (pool / no-vote context) */
+      background: var(--pill-bg);
+      border: 1px solid var(--pill-border);
+      color: var(--pill-text);
+    }
+    .person-pill:active { cursor: grabbing; opacity: 0.7; transform: scale(0.96); }
+    .person-pill img {
+      border-radius: 50%;
+      height: 20px;
+      width: 20px;
+    }
+    .person-pill .remove-btn {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.6;
+      padding: 0 0 0 2px;
+      transition: opacity 0.1s;
+    }
+    .person-pill .remove-btn:hover { opacity: 1; }
+
+    /* Interested in this topic */
+    .person-pill.pill-interested {
+      background: var(--interested-bg);
+      border-color: var(--interested-border);
+      color: var(--interested-text);
+    }
+    /* Not interested in this topic */
+    .person-pill.pill-not-interested {
+      background: var(--not-interested-bg);
+      border-color: var(--not-interested-border);
+      color: var(--not-interested-text);
+    }
+    /* Person who voted nowhere */
+    .person-pill.pill-no-votes {
+      background: var(--no-votes-bg);
+      border-color: var(--no-votes-border);
+      color: var(--no-votes-text);
+    }
+
+    .interest-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .pill-interested    .interest-dot { background: var(--interested-text); }
+    .pill-not-interested .interest-dot { background: var(--not-interested-text); }
+    .pill-no-votes      .interest-dot { background: var(--no-votes-text); }
+
+    .topic-monocompany-warning {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: var(--monocompany-bg);
+      border-bottom: 1px solid var(--monocompany-border);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--monocompany-text);
+      letter-spacing: 0.02em;
+    }
+    .topic-monocompany-warning::before {
+      content: "⚠";
+      font-size: 12px;
+    }
+
+    /* Output */
+    #output-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    #output-section h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    #output {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      padding: 14px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .copy-row { display: flex; gap: 8px; margin-top: 10px; }
+
+    #status { color: var(--accent-hover); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Hackathon Team Assigner</h1>
+  <span>Drag people to topics. Green pill = voted interested. Orange pill = not interested. Right panel tracks satisfaction.</span>
+</header>
+
+<main>
+  <div id="setup">
+    <h2>Setup</h2>
+
+    <div class="field">
+      <label>Discussion table (paste the markdown table — Team column should list interested people per topic)</label>
+      <textarea id="table-input" style="min-height:160px" placeholder="| Rank | Topic | Votes | Team |&#10;|:----:|:------|:-----:|:-----|&#10;| 1 | [#1 - Topic title](https://github.com/org/repo/issues/1) | 11 | @alice, @bob |&#10;..."></textarea>
+      <small>The Team column should contain the handles of everyone who voted "interested" for that topic (comma-separated). Duplicates across topics are fine.</small>
+    </div>
+
+    <div class="field">
+      <label>All participants (one per line — <code>handle</code> or <code>handle:company</code>)</label>
+      <textarea id="participants" placeholder="alice:ACME&#10;bob:ACME&#10;carol:Initech&#10;dave"></textarea>
+      <small>Company is optional. When provided, topics where all members share a company will be flagged.</small>
+    </div>
+
+    <div id="error"></div>
+
+    <button class="btn" id="load-btn" onclick="loadDiscussion()">Load</button>
+  </div>
+
+  <div id="workarea">
+    <div id="workarea-inner">
+      <div class="toolbar">
+        <span class="toolbar-title" id="disc-title"></span>
+        <button class="btn btn-secondary" onclick="resetAll()">Reset</button>
+      </div>
+
+      <div id="pool-section">
+        <h3>Unassigned participants</h3>
+        <div id="pool" ondragover="onDragOver(event, 'pool')" ondragleave="onDragLeave(event, 'pool')" ondrop="onDrop(event, 'pool')"></div>
+      </div>
+
+      <div id="topics-grid"></div>
+
+      <div id="output-section">
+        <h3>Generated Markdown Table</h3>
+        <div id="output"></div>
+        <div class="copy-row">
+          <button class="btn" onclick="copyOutput()">Copy to Clipboard</button>
+          <span id="status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="satisfaction-panel">
+      <h3>Interest Satisfaction</h3>
+      <div id="satisfaction-summary"></div>
+      <div id="satisfaction-list"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ---- state ----
+// topics: [{rank, number, title, url, votes, teamsize, interested: Set<handle>, team: [handle]}]
+// allHandles: [handle]
+// interestMap: Map<handle, Set<topicIdx>>  -- which topics each person voted interested on
+let topics    = [];
+let allHandles = [];
+let interestMap = new Map(); // handle -> Set of topic indices
+let companyMap  = new Map(); // handle -> company string
+let dragging  = null;        // {handle, fromId}
+
+// ---- load ----
+function loadDiscussion() {
+  const tableText = document.getElementById('table-input').value.trim();
+  const raw       = document.getElementById('participants').value.trim();
+
+  if (!tableText || !raw) { showError('Both fields are required.'); return; }
+
+  topics = parseTable(tableText);
+  if (!topics.length) { showError('Could not find any topic rows. Make sure you pasted the full markdown table including the header.'); return; }
+
+  // Parse participants + optional company from same field
+  companyMap = new Map();
+  allHandles = raw.split('\n').map(line => {
+    const sep = line.indexOf(':');
+    if (sep !== -1) {
+      const handle = line.slice(0, sep).replace(/^@/, '').trim();
+      const company = line.slice(sep + 1).trim();
+      if (company) companyMap.set(handle, company);
+      return handle;
+    }
+    return line.replace(/^@/, '').trim();
+  }).filter(Boolean);
+
+  // Build interestMap
+  interestMap = new Map();
+  allHandles.forEach(h => interestMap.set(h, new Set()));
+  topics.forEach((t, idx) => {
+    t.interested.forEach(h => {
+      if (!interestMap.has(h)) interestMap.set(h, new Set());
+      interestMap.get(h).add(idx);
+    });
+  });
+
+  hideError();
+  renderAll();
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('workarea').style.display = 'flex';
+  document.getElementById('disc-title').textContent = `${topics.length} topics loaded`;
+
+  fetchTeamSizes();
+}
+
+async function fetchTeamSizes() {
+  const sample = topics[0]?.url;
+  if (!sample) return;
+  const m = sample.match(/github\.com\/([^/]+\/[^/]+)\/issues\//);
+  if (!m) return;
+  const slug = m[1];
+
+  await Promise.all(topics.map(async (t) => {
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${slug}/issues/${t.number}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const sizeLabel = data.labels.find(l => l.name.startsWith('teamsize/'));
+      if (sizeLabel) t.teamsize = sizeLabel.name.replace('teamsize/', '');
+    } catch (_) {}
+  }));
+
+  renderTopics();
+}
+
+// ---- parse ----
+function parseTable(body) {
+  // Match: | rank | [#N - title](url) | votes | team-col |
+  const re = /^\|\s*(\d+)\s*\|\s*\[#(\d+)\s*-\s*(.*?)\]\((.*?)\)\s*\|\s*(\d+)\s*\|\s*(.*?)\s*\|/gm;
+  const result = [];
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    const teamCol = m[6].trim();
+    // Parse handles from the team column: @handle or handle, separated by commas/spaces
+    const interested = new Set(
+      teamCol === '-' || teamCol === ''
+        ? []
+        : teamCol.split(/[\s,]+/).map(h => h.replace(/^@/, '').trim()).filter(Boolean)
+    );
+    result.push({
+      rank: parseInt(m[1]),
+      number: parseInt(m[2]),
+      title: m[3].trim(),
+      url: m[4].trim(),
+      votes: parseInt(m[5]),
+      teamsize: null,
+      interested,
+      team: []
+    });
+  }
+  return result;
+}
+
+// ---- render ----
+function renderAll() {
+  renderPool();
+  renderTopics();
+  renderSatisfaction();
+  renderOutput();
+}
+
+function assignedHandles() {
+  return new Set(topics.flatMap(t => t.team));
+}
+
+function renderPool() {
+  const assigned = assignedHandles();
+  const pool = document.getElementById('pool');
+  pool.innerHTML = '';
+
+  const unassigned = allHandles.filter(h => !assigned.has(h));
+  const withInterest    = unassigned.filter(h => interestMap.get(h)?.size > 0);
+  const withoutInterest = unassigned.filter(h => !interestMap.get(h)?.size);
+
+  if (withInterest.length) {
+    const lbl = document.createElement('div');
+    lbl.className = 'pool-group-label';
+    lbl.textContent = 'Has topic preferences';
+    pool.appendChild(lbl);
+    withInterest.forEach(h => pool.appendChild(makePill(h, 'pool', null)));
+  }
+
+  if (withoutInterest.length) {
+    const lbl = document.createElement('div');
+    lbl.className = 'pool-group-label';
+    lbl.textContent = 'No topic preference';
+    pool.appendChild(lbl);
+    withoutInterest.forEach(h => pool.appendChild(makePill(h, 'pool', null)));
+  }
+}
+
+function renderTopics() {
+  const grid = document.getElementById('topics-grid');
+  grid.innerHTML = '';
+  topics.forEach((t, idx) => {
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.dataset.idx = idx;
+    card.ondragover  = e => onDragOver(e, idx);
+    card.ondragleave = e => onDragLeave(e, idx);
+    card.ondrop      = e => onDrop(e, idx);
+
+    const rankClass = t.rank <= 3 ? ` rank-${t.rank}` : '';
+    const sizeBadge = t.teamsize
+      ? `<div class="teamsize-badge teamsize-${t.teamsize}">${t.teamsize}</div>`
+      : '';
+
+    card.innerHTML = `
+      <div class="topic-header">
+        <div class="topic-rank${rankClass}">#${t.rank}</div>
+        <div class="topic-info">
+          <div class="topic-title"><a href="${t.url}" target="_blank">#${t.number} - ${escHtml(t.title)}</a></div>
+          <div class="topic-votes">${t.votes} vote${t.votes !== 1 ? 's' : ''}</div>
+        </div>
+        ${sizeBadge}
+      </div>
+      <div class="topic-interested" id="interested-${idx}"></div>
+      <div class="topic-team" id="team-${idx}"></div>
+    `;
+
+    // Interested voters row
+    const intDiv = card.querySelector(`#interested-${idx}`);
+    if (t.interested.size > 0) {
+      const lbl = document.createElement('span');
+      lbl.className = 'topic-interested-label';
+      lbl.textContent = 'Interested:';
+      intDiv.appendChild(lbl);
+
+      t.interested.forEach(h => {
+        const isAssigned = t.team.includes(h);
+        const wrap = document.createElement('div');
+        wrap.className = 'interest-avatar' + (isAssigned ? ' assigned' : '');
+        wrap.innerHTML = `<img src="https://github.com/${h}.png?size=40" alt="" /><span class="avatar-tooltip">@${escHtml(h)}</span>`;
+        intDiv.appendChild(wrap);
+      });
+    } else {
+      intDiv.style.display = 'none';
+    }
+
+    // Team members
+    const teamDiv = card.querySelector(`#team-${idx}`);
+    t.team.forEach(h => teamDiv.appendChild(makePill(h, idx, idx)));
+
+    // Mono-company warning: only show if companyMap is populated and team has 2+ members all from same company
+    if (companyMap.size > 0 && t.team.length >= 2) {
+      const companies = t.team.map(h => companyMap.get(h)).filter(Boolean);
+      if (companies.length === t.team.length) {
+        const unique = new Set(companies);
+        if (unique.size === 1) {
+          const warn = document.createElement('div');
+          warn.className = 'topic-monocompany-warning';
+          warn.textContent = `All from ${[...unique][0]}`;
+          // Insert before team div
+          card.insertBefore(warn, teamDiv);
+        }
+      }
+    }
+
+    grid.appendChild(card);
+  });
+}
+
+function makePill(handle, source, topicIdx) {
+  const pill = document.createElement('div');
+  pill.draggable = true;
+  pill.dataset.handle = handle;
+  pill.dataset.source = String(source);
+
+  // Determine pill style
+  let pillClass = 'person-pill';
+  if (topicIdx !== null && topicIdx !== undefined) {
+    // In a topic card: show interest
+    const t = topics[topicIdx];
+    if (t.interested.has(handle)) {
+      pillClass += ' pill-interested';
+    } else {
+      pillClass += ' pill-not-interested';
+    }
+  } else {
+    // In pool: show if person has no interest votes at all
+    if (!interestMap.get(handle)?.size) {
+      pillClass += ' pill-no-votes';
+    }
+  }
+  pill.className = pillClass;
+
+  const avatar = `<img src="https://github.com/${handle}.png?size=40" alt="" />`;
+  const dot = `<span class="interest-dot"></span>`;
+
+  const showDot = pillClass.includes('pill-interested') || pillClass.includes('pill-not-interested') || pillClass.includes('pill-no-votes');
+  const removeBtn = source !== 'pool' ? `<button class="remove-btn" title="Remove">×</button>` : '';
+  pill.innerHTML = `${avatar}${showDot ? dot : ''}@${escHtml(handle)}${removeBtn}`;
+
+  if (source !== 'pool') {
+    pill.querySelector('.remove-btn').onclick = (e) => {
+      e.stopPropagation();
+      removeFromTopic(handle, source);
+    };
+  }
+
+  pill.ondragstart = (e) => {
+    dragging = { handle, fromId: source };
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => pill.style.opacity = '0.4', 0);
+  };
+  pill.ondragend = () => { pill.style.opacity = ''; dragging = null; };
+
+  return pill;
+}
+
+function removeFromTopic(handle, source) {
+  if (source === 'pool') return;
+  topics[source].team = topics[source].team.filter(h => h !== handle);
+  renderAll();
+}
+
+// ---- satisfaction panel ----
+function renderSatisfaction() {
+  // Only track people who voted interested on at least one topic
+  const interested = allHandles.filter(h => interestMap.get(h)?.size > 0);
+  const assigned = assignedHandles();
+
+  // For each interested person: are they placed in a topic they wanted?
+  let happy = 0, unhappy = 0, unplaced = 0;
+
+  const rows = interested.map(h => {
+    const wantedTopics = interestMap.get(h); // Set<topicIdx>
+    const isAssigned = assigned.has(h);
+
+    if (!isAssigned) {
+      unplaced++;
+      return { handle: h, state: 'unplaced', label: 'Unplaced' };
+    }
+
+    // Find which topic they're in
+    const topicIdx = topics.findIndex(t => t.team.includes(h));
+    if (topicIdx === -1) {
+      unplaced++;
+      return { handle: h, state: 'unplaced', label: 'Unplaced' };
+    }
+
+    if (wantedTopics.has(topicIdx)) {
+      happy++;
+      return { handle: h, state: 'happy', label: 'Happy' };
+    } else {
+      unhappy++;
+      return { handle: h, state: 'unhappy', label: 'Not preferred' };
+    }
+  });
+
+  const summary = document.getElementById('satisfaction-summary');
+  summary.innerHTML = `<div class="satisfaction-summary-numbers"><span>${happy}</span>/${interested.length}</div> placed in a preferred topic`;
+
+  const list = document.getElementById('satisfaction-list');
+  list.innerHTML = '';
+
+  // Sort: unhappy first, then unplaced, then happy
+  rows.sort((a, b) => {
+    const order = { unhappy: 0, unplaced: 1, happy: 2 };
+    return order[a.state] - order[b.state];
+  });
+
+  rows.forEach(({ handle, state, label }) => {
+    const row = document.createElement('div');
+    row.className = `sat-row ${state}`;
+    row.innerHTML = `
+      <img src="https://github.com/${handle}.png?size=40" alt="" />
+      <span class="sat-name">@${escHtml(handle)}</span>
+      <span class="sat-status">${label}</span>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// ---- drag & drop ----
+function onDragOver(e, targetId) {
+  if (!dragging) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const el = targetId === 'pool'
+    ? document.getElementById('pool')
+    : document.querySelector(`.topic-card[data-idx="${targetId}"]`);
+  el?.classList.add('drag-over');
+}
+
+function onDragLeave(e, targetId) {
+  const el = targetId === 'pool'
+    ? document.getElementById('pool')
+    : document.querySelector(`.topic-card[data-idx="${targetId}"]`);
+  el?.classList.remove('drag-over');
+}
+
+function onDrop(e, targetId) {
+  e.preventDefault();
+  const el = targetId === 'pool'
+    ? document.getElementById('pool')
+    : document.querySelector(`.topic-card[data-idx="${targetId}"]`);
+  el?.classList.remove('drag-over');
+  if (!dragging) return;
+
+  const { handle, fromId } = dragging;
+
+  // Remove from source topic
+  if (fromId !== 'pool') {
+    topics[fromId].team = topics[fromId].team.filter(h => h !== handle);
+  }
+
+  // Add to target topic
+  if (targetId !== 'pool') {
+    if (!topics[targetId].team.includes(handle)) {
+      topics[targetId].team.push(handle);
+    }
+  }
+
+  renderAll();
+}
+
+// ---- output ----
+function renderOutput() {
+  const rows = topics.map(t => {
+    const team = t.team.length > 0 ? t.team.map(h => `@${h}`).join(', ') : '-';
+    return `| ${t.rank} | [#${t.number} - ${t.title}](${t.url}) | ${t.votes} | ${team} |`;
+  });
+
+  const table = [
+    '| Rank | Topic | Votes | Team |',
+    '|:----:|:------|:-----:|:-----|',
+    ...rows
+  ].join('\n');
+
+  document.getElementById('output').textContent = table;
+}
+
+async function copyOutput() {
+  const text = document.getElementById('output').textContent;
+  await navigator.clipboard.writeText(text);
+  const s = document.getElementById('status');
+  s.textContent = 'Copied!';
+  setTimeout(() => s.textContent = '', 2000);
+}
+
+function resetAll() {
+  topics = [];
+  allHandles = [];
+  interestMap = new Map();
+  companyMap = new Map();
+  dragging = null;
+  document.getElementById('workarea').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+}
+
+// ---- utils ----
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('error').style.display = 'none';
+}
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
