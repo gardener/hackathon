@@ -16,3 +16,4 @@ Make sure to join the [#hack-the-garden](https://gardener-cloud.slack.com/archiv
 ## Submitting a topic proposal
 
 If you're participating in a hackathon event and want to submit a topic proposal, please create an issue using [the template](https://github.com/gardener/hackathon/issues/new?template=hackathon-topic.md).
+
