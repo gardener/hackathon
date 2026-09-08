@@ -1,7 +1,7 @@
 ---
 name: Hackathon Discussion Proposal
 about: Suggest a discussion for a hackathon
-labels: 'Q4/2026', 'kind/discussion'
+labels: ['Q4/2026', 'kind/discussion']
 ---
 
 **How to categorize this discussion?**
