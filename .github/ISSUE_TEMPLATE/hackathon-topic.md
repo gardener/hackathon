@@ -26,6 +26,6 @@ If multiple identifiers make sense you can also state the commands multiple time
 <!-- /label fast-track -->
 
 <!-- Keep the following label as we don't want Prow to mark issues as stale in this repository. -->
-/label lifecycle/frozen
+/lifecycle frozen
 
 **What is the topic about?**:
